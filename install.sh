@@ -9,34 +9,6 @@ cd $(mktemp -d)
 # Pre-authorise sudo
 sudo echo
 
-# Select language, optional
-declare -A LANGS=(
-    [Chinese]=zh_CN
-    [English]=EN
-    [French]=FR
-    [German]=DE
-    [Italian]=IT
-    [Norwegian]=NO
-    [Portuguese]=PT
-    [Russian]=RU
-    [Spanish]=ES
-    [Ukrainian]=UA
-)
-
-LANG_NAMES=($(echo ${!LANGS[*]} | tr ' ' '\n' | sort -n))
-
-PS3='Please select language #: '
-select l in "${LANG_NAMES[@]}"
-do
-    if [[ -v LANGS[$l] ]]
-    then
-        LANG=$l
-        break
-    else
-        echo 'No such language, try again'
-    fi
-done < /dev/tty
-
 # Detect distro and set GRUB location and update method
 GRUB_DIR='grub'
 UPDATE_GRUB=''
@@ -65,17 +37,10 @@ fi
 
 
 echo 'Fetching theme archive'
-wget -O ${THEME}.zip https://github.com/bluekrow/${THEME}/archive/master.zip
+wget -O ${THEME}.zip https://github.com/bluekrow/${THEME}/archive/master.zip 1>> ${THEME}.log 2>> ${THEME}.error.log
 
 echo 'Unpacking theme'
-unzip ${THEME}.zip
-
-if [[ "$LANG" != "English" ]]
-then
-    echo "Changing language to ${LANG}"
-    sed -i -r -e '/^\s+# EN$/{n;s/^(\s*)/\1# /}' \
-              -e '/^\s+# '"${LANGS[$LANG]}"'$/{n;s/^(\s*)#\s*/\1/}' ${THEME}-master/theme.txt
-fi
+unzip ${THEME}.zip 1>> ${THEME}.log 2>> ${THEME}.error.log
 
 echo 'Creating GRUB themes directory'
 sudo mkdir -p /boot/${GRUB_DIR}/themes/${THEME}
